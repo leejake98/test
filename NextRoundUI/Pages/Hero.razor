@@ -1,0 +1,59 @@
+﻿@page "/"
+@page "/Hero"
+@inject IJSRuntime JsRuntime
+
+
+<!-- ======= Hero Section ======= -->
+<section id="hero" class="d-flex flex-column justify-content-center">
+    <div class="container" data-aos="zoom-in" data-aos-delay="500">
+        <div class="row mb-5">
+            <div class="col-12">
+                <h1 class="typed" data-typed-items="누구나 시작은 벤처였다."></h1>
+
+            </div>
+        </div>
+
+
+
+
+        <div class="row mb-5">
+            <div class="col-lg-auto col-md-12">
+                <p>작은 기업의 큰 내일을 만들어 냅니다.</p>
+            </div>
+            <div class="col-lg-auto col-md-12">
+                <p>강해지고 또 강해져서 100년 가는 기업이 됩니다.</p>
+            </div>
+            <div class="col-12 mb-5">
+                <p>당신의 꿈과 기술이 대한민국 미래입니다.</p>
+            </div>
+
+
+            <div class="col-12 mb-2 mt-4 d-none d-lg-block">
+                <p> </p>
+                <img src="assets/img/frog.png" class="img-fluid mx-auto" style="width: 120px; height: 120px; object-fit: contain; position: absolute; left: -6em; top: -3em;">
+
+            </div>
+            <div class="col-12 mb-2">
+                <p><strong>KDB NextRound가 함께 하겠습니다.</strong></p>
+            </div>
+
+
+        </div>
+
+
+
+
+    </div>
+</section><!-- End Hero -->
+
+
+
+@code{
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JsRuntime.InvokeVoidAsync("heroTyped");
+    }
+
+}
+

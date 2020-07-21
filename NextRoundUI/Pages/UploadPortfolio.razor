@@ -1,0 +1,430 @@
+﻿@page "/UploadPortfolio"
+@using NextRoundUI.Services
+@inject IFileUpload fileUpload
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+
+@inject IPortfolioData _db
+
+@inject IJSRuntime JSRuntime;
+@inject IModalService ModalService
+
+
+<!-- ======= Portfolio Details ======= -->
+<section id="portfolio-details" class="portfolio-details">
+
+    <div class="container" data-aos="fade-up">
+
+        <div class="row">
+
+            <div class="col-lg-8">
+
+                <div class="owl-carousel portfolio-details-carousel">
+
+                    <img src="assets/img/car-49278__340.jpg" class="img-fluid mx-auto" alt="Your Pictures" style="width: 640px; height: 300px; object-fit: contain;">
+                    <img src="assets/img/car-race-438467__340.jpg" class="img-fluid mx-auto" alt="Your Pictures" style="width: 640px; height: 300px; object-fit: contain;">
+
+                </div>
+            
+                <div class="row justify-content-center mt-3">
+
+                    <div class="col-auto">
+                        <p><i class="bx bx-cloud-upload"></i> Upload Your Pictures to go up here!</p>
+                    </div>
+                    <div class="col-auto">
+
+                        <InputFile id="uploadFiles" multiple OnChange="HandleSelection" />
+
+                    </div>
+                </div>
+
+                <div class="row justify-content-center p-5">
+                    <div class="col-12">
+                        <ul class="list-group d-block">
+
+                            @if (selectedFiles != null)
+
+                            {
+                                @if (uploaded)
+                                {
+                                    foreach (var file in selectedFiles)
+                                    {
+
+                                        <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-3">
+                                            
+                                            @if (file.Type == "video/mp4")
+                                            {
+                                                <div class="col-auto p-0"><span class="badge badge-primary badge-pill">Uploaded</span></div>
+                                                <div class="col-auto p-0">@file.Name</div>
+
+                                            }
+                                            else
+                                            {
+                                                <div class="col-auto p-0"><span class="badge badge-primary badge-pill">Uploaded</span></div>
+                                                <div class="col-auto p-0">@file.Name</div>
+                                                <div class="col-auto p-0"><img src="assets/img/portfolio/@file.Name" class="img-fluid mx-auto" alt="Your Pictures" style="width: 70px; height: 50px; object-fit: contain;"></div>
+
+                                                <div class="col-auto p-0"><input type="radio" title="Pick Thumbnail Pic" name="thumbnail" @onclick="()=>SetThumbnailFileName(file.Name)"></div>
+
+                                            }
+                                        </li>
+
+
+
+                                    }
+
+
+                                }
+
+                            }
+
+
+                        </ul>
+                    </div>
+                </div>
+
+
+            </div>
+
+            <div class="col-lg-4 portfolio-info p-4 bg-light rounded">
+
+                <form>
+                    <div class="form-group">
+                        <label for="exampleFormControlInput1">회사개요</label>
+                        <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="회사명" @bind="NewPortfolio.NameOfCompany">
+                        <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="CEO" @bind="NewPortfolio.CEO">
+                        <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="설립일자" @bind="NewPortfolio.YearCompanyWasFounded">
+                        <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="www.example.com" @bind="NewPortfolio.HomepageURL">
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleFormControlInput1">주요제품</label>
+
+                        <div class="form-row">
+                            <div class="col-10">
+                                <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="주요제품" @bind="NewPortfolio.NameOfMainProduct">
+                            </div>
+                            <div class="col-2">
+                                <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExsitingHashTags" aria-expanded="false" aria-controls="collapseExample">
+                                    <i class="bx bx-hash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+
+                        <div class="collapse p-0" id="collapseExsitingHashTags">
+                            <div class="card card-body">
+                                <div class="form-check p-0">
+
+                                    <p>Select from current tags</p>
+
+                                    <div class="row p-0">
+
+
+                                        @if (exsitingHashTagList is null)
+                                        {
+                                            <p>Loading</p>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var exsitingHashTag in exsitingHashTagList)
+                                            {
+                                                <div class="col-auto m-0 p-0">
+                                                    <div class="input-group input-group-sm m-0 p-1">
+                                                        <div class="input-group-prepend">
+                                                            <div class="input-group-text">
+                                                                <input type="checkbox" aria-label="Checkbox for following text input" @bind="@exsitingHashTag.SelectedToBeIncluded">
+                                                            </div>
+                                                        </div>
+                                                        <div class="input-group-append">
+                                                            <span class="input-group-text  bg-white">@exsitingHashTag.ProductCategory</span>
+                                                        </div>
+                                                    </div>
+
+
+                                                </div>
+
+                                            }
+
+                                        }
+
+
+                                    </div>
+
+                                    <hr />
+
+
+                                    <div class="row">
+
+                                        <div class="col-12">
+
+                                            <button class="btn btn-outline-dark border-0" type="button" data-toggle="collapse" data-target="#collapseNewHashTags" aria-expanded="false" aria-controls="collapseExample">
+                                                <i class="bx bx-message-square-add"></i> Add your own tag
+                                            </button>
+
+
+
+                                            <button class="btn btn-outline-dark border-0" type="button" @onclick="AddNewTagToBeApplied">
+                                                <i class="bx bx-message-square-add"></i> more
+                                            </button>
+
+                                            <div class="collapse p-0 mt-3" id="collapseNewHashTags">
+
+                                                @foreach (var HashTagToBeAppliedToThisPortfolio in HashTagToBeAppliedToThisPortfolioList)
+                                                {
+                                                    <div class="row">
+
+                                                        <div class="col-10 m-0 p-0">
+
+                                                            <div class="input-group input-group-sm m-0 p-1">
+                                                                <div class="input-group-prepend">
+                                                                    <div class="input-group-text">
+                                                                        <input type="checkbox" aria-label="Checkbox for following text input" @bind="HashTagToBeAppliedToThisPortfolio.SelectedToBeIncluded">
+                                                                    </div>
+                                                                </div>
+                                                                <input type="text" class="form-control" placeholder="Your Tag" @bind="HashTagToBeAppliedToThisPortfolio.ProductCategory">
+                                                            </div>
+
+
+
+                                                        </div>
+                                                        <div class="col-2 m-0 p-0">
+
+                                                            <button class="btn btn-outline-dark border-0" type="button" @onclick="()=>RemoveAddedNewTagToBeApplied(HashTagToBeAppliedToThisPortfolio) ">
+                                                                <i class="bx bx-message-square-x"></i>
+                                                            </button>
+                                                        </div>
+
+
+                                                    </div>
+
+                                                }
+
+                                            </div>
+
+
+                                        </div>
+
+
+
+                                    </div>
+
+
+
+                                </div>
+
+
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="exampleFormControlTextarea1">Your Story!</label>
+                        <textarea class="form-control" id="exampleFormControlTextarea1"></textarea>
+                    </div>
+
+
+                    <button class="btn btn-primary" @onclick="SubmitPortfolioDetailsToDB">Submit</button>
+                </form>
+
+            </div>
+
+        </div>
+
+
+
+    </div>
+
+
+
+
+</section>
+
+
+
+
+
+
+@code {
+
+
+    public PortfolioModel NewPortfolio = new PortfolioModel();
+    public List<PortfolioModel> NewPortfolioList = new List<PortfolioModel>();
+    public List<PortfolioModel> UploadedPortfolioList = new List<PortfolioModel>();
+
+
+    private List<ProductCategoryModel> exsitingHashTagList;
+
+    private List<ProductCategoryModel> HashTagToBeAppliedToThisPortfolioList = new List<ProductCategoryModel>();
+
+
+    private List<int> portfolioIdList;
+
+    IFileListEntry[] selectedFiles;
+
+    public string thumbnailFileName = "";
+
+    public void SetThumbnailFileName(string fileName)
+    {
+        thumbnailFileName = fileName;
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        exsitingHashTagList = await _db.GetAllCategoriesOfProductUniquely();
+
+        HashTagToBeAppliedToThisPortfolioList.Add(new ProductCategoryModel
+        {
+            SelectedToBeIncluded = true
+        });
+
+
+    }
+
+
+
+    public void AddNewTagToBeApplied()
+    {
+        HashTagToBeAppliedToThisPortfolioList.Add(new ProductCategoryModel
+        {
+            SelectedToBeIncluded = true
+        });
+    }
+
+    public void RemoveAddedNewTagToBeApplied(ProductCategoryModel newEntryToBeRemoved)
+    {
+        HashTagToBeAppliedToThisPortfolioList.Remove(newEntryToBeRemoved);
+    }
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JSRuntime.InvokeVoidAsync("runCarousel");
+
+
+    }
+
+    bool uploaded = false;
+
+    bool showPreview = false;
+
+    async Task HandleSelection(IFileListEntry[] files)
+
+    {
+
+        selectedFiles = files;
+
+        foreach (var file in files)
+        {
+            await LoadFile(file);
+        }
+
+        Thread.Sleep(500);
+        uploaded = true;
+
+    }
+
+
+
+    async Task LoadFile(IFileListEntry file)
+
+    {
+
+        // So the UI updates to show progress
+
+        file.OnDataRead += (sender, eventArgs) => InvokeAsync(StateHasChanged);
+
+
+
+        // Just load into .NET memory to show it can be done
+
+        // Alternatively it could be saved to disk, or parsed in memory, or similar
+        if (file.Type == "video/mp4")
+        {
+            await fileUpload.VideoUploadAsync(file);
+        }
+        else
+        {
+            await fileUpload.UploadAsync(file);
+        }
+
+    }
+
+
+
+
+    public void SubmitPortfolioDetailsToDB()
+    {
+
+        Random rnd = new Random();
+
+        foreach (var exsitingHashTag in exsitingHashTagList)
+        {
+
+            if (exsitingHashTag.SelectedToBeIncluded)
+            {
+                NewPortfolio.ProductCategories.Add(exsitingHashTag);
+            }
+
+
+        }
+        foreach (var HashTagToBeAppliedToThisPortfolio in HashTagToBeAppliedToThisPortfolioList)
+        {
+
+            if (HashTagToBeAppliedToThisPortfolio.SelectedToBeIncluded & HashTagToBeAppliedToThisPortfolio.ProductCategory != null)
+            {
+                NewPortfolio.ProductCategories.Add(HashTagToBeAppliedToThisPortfolio);
+            }
+
+
+        }
+
+        NewPortfolio.portfolioRankings.Add(new PortfolioRankModel { PortfolioRankingName = "RankingA", PortfolioRanking = rnd.Next(1, 10000) });
+        NewPortfolio.portfolioRankings.Add(new PortfolioRankModel { PortfolioRankingName = "RankingB", PortfolioRanking = rnd.Next(1, 10000) });
+        NewPortfolio.portfolioRankings.Add(new PortfolioRankModel { PortfolioRankingName = "RankingC", PortfolioRanking = rnd.Next(1, 10000) });
+        NewPortfolio.portfolioRankings.Add(new PortfolioRankModel { PortfolioRankingName = "RankingD", PortfolioRanking = rnd.Next(1, 10000) });
+        NewPortfolio.portfolioRankings.Add(new PortfolioRankModel { PortfolioRankingName = "RankingE", PortfolioRanking = rnd.Next(1, 10000) });
+
+        NewPortfolio.UpdatedDateTime = DateTime.Now;
+
+
+        foreach (var file in selectedFiles)
+        {
+            if (file.Name == thumbnailFileName)
+            {
+                NewPortfolio.ProductImages.Add(new ProductImageModel
+                {
+                    ImageFileAddress = file.Name
+                });
+            }
+
+
+        }
+        foreach (var file in selectedFiles)
+        {
+            if (file.Name != thumbnailFileName)
+            {
+                NewPortfolio.ProductImages.Add(new ProductImageModel
+                {
+                    ImageFileAddress = file.Name
+                });
+            }
+
+
+        }
+
+
+
+
+
+        _db.InsertPortfolio(NewPortfolio);
+    }
+
+
+}
+
+

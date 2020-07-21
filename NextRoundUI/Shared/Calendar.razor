@@ -1,0 +1,391 @@
+﻿@page "/cal"
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+
+
+<div class="calendar">
+
+    <header>
+
+        <div class="row justify-content-center">
+            <div class="col-3 p-0">
+
+                <input type="number" class="form-control text-center border-0" placeholder="Year" @bind="@Year" style="font-size: 1.5em; font-weight: 800;">
+
+            </div>
+            <div class="col-5 p-0">
+
+                <select name="" id="" class="form-control text-center  border-0" @onchange="SelectMonth" style="font-size: 1.5em; font-weight: 800;">
+                    @foreach (var mo in months)
+                    {
+                        if (mo.MonthNumber == month)
+                        {
+                            <option value="@mo.MonthNumber" selected="selected">@mo.MonthName</option>
+
+                        }
+                        else
+                        {
+                            <option value="@mo.MonthNumber">@mo.MonthName</option>
+                        }
+                    }
+
+                </select>
+
+
+            </div>
+
+            <button class="btn btn-outline-light btn-today border-0" title="오늘" @onclick="GotoToday"><i class="bx bx-calendar-check" style=" color: #0362bbbd;"></i></button>
+            <button class="btn-prev fontawesome-angle-left border-0" title="다음달" @onclick="GotoPrevMonth"></button>
+            <button class="btn-next fontawesome-angle-right border-0" title="전달" @onclick="GotoNextMonth"></button>
+        </div>
+
+
+    </header>
+    <hr class="mt-0" />
+    <div class="row justify-content-center">
+
+        <table class="m-0 p-0">
+
+            <thead>
+
+                <tr>
+
+                    <td>Sun</td>
+                    <td>Mon</td>
+                    <td>Tue</td>
+                    <td>Wed</td>
+                    <td>Thu</td>
+                    <td>Fri</td>
+                    <td>Sat</td>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @*<tr>
+                        <td class="prev-month">26</td>
+                        <td class="prev-month">27</td>
+                        <td class="prev-month">28</td>
+                        <td class="prev-month">29</td>
+                        <td class="prev-month">30</td>
+                        <td class="prev-month">31</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>3</td>
+                        <td>4</td>
+                        <td>5</td>
+                        <td>6</td>
+                        <td>7</td>
+                        <td>8</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td class="event">10</td>
+                        <td>11</td>
+                        <td>12</td>
+                        <td>13</td>
+                        <td>14</td>
+                        <td>15</td>
+                    </tr>
+                    <tr>
+                        <td>16</td>
+                        <td>17</td>
+                        <td>18</td>
+                        <td>19</td>
+                        <td>20</td>
+                        <td class="event">21</td>
+                        <td>22</td>
+                    </tr>
+
+                    <tr>
+                        <td class="current-day event">23</td>
+                        <td>24</td>
+                        <td>25</td>
+                        <td>26</td>
+                        <td>27</td>
+                        <td>28</td>
+                        <td>29</td>
+                    </tr>
+                    <tr>
+                        <td>30</td>
+                        <td class="next-month">1</td>
+                        <td class="next-month">2</td>
+                        <td class="next-month">3</td>
+                        <td class="next-month">4</td>
+                        <td class="next-month">5</td>
+                        <td class="next-month">6</td>
+                    </tr>*@
+
+                @for (int r = 0; r < rowsCount; r++)
+                {
+                <tr>
+                    @foreach (var item in days.Skip(r * 7).Take(7))
+                    {
+                        if (item.IsLastMonth)
+                        {
+                            <td @onclick="GotoPrevMonth">@DayTemplate(item)</td>
+
+                        }
+                        else if (item.IsNextMonth)
+                        {
+                            <td @onclick="GotoNextMonth">@DayTemplate(item)</td>
+
+                        }
+                        else
+                        {
+                            <td>@DayTemplate(item)</td>
+                        }
+                    }
+                </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+
+</div> <!-- end calendar -->
+
+
+
+
+@code
+{
+
+    [Parameter]
+    public EventCallback<CalendarDay> OnCalendarUpdated { get; set; }
+
+    [Parameter]
+    public RenderFragment<CalendarDay> DayTemplate { get; set; }
+
+    [Parameter]
+    public List<NextroundIREventsModel> NextroundList { get; set; }
+
+    private int year = DateTime.Now.Year;
+    private int month = DateTime.Now.Month;
+
+    private List<CalendarDay> days = new List<CalendarDay>();
+    private List<CalendarMonth> months = new List<CalendarMonth>();
+
+    private int rowsCount = 0;
+
+
+    public int Year
+    {
+        get { return year; }
+        set
+        {
+            year = value;
+            UpdateCalendar();
+        }
+    }
+
+    public int Month
+    {
+        get { return month; }
+        set
+        {
+            month = value;
+            UpdateCalendar();
+        }
+    }
+
+
+
+    protected override void OnInitialized()
+    {
+        UpdateCalendar();
+
+
+        months.Add(new CalendarMonth { MonthNumber = 1, MonthName = "January" });
+        months.Add(new CalendarMonth { MonthNumber = 2, MonthName = "February" });
+        months.Add(new CalendarMonth { MonthNumber = 3, MonthName = "March" });
+        months.Add(new CalendarMonth { MonthNumber = 4, MonthName = "April" });
+        months.Add(new CalendarMonth { MonthNumber = 5, MonthName = "May" });
+        months.Add(new CalendarMonth { MonthNumber = 6, MonthName = "June" });
+        months.Add(new CalendarMonth { MonthNumber = 7, MonthName = "July" });
+        months.Add(new CalendarMonth { MonthNumber = 8, MonthName = "August" });
+        months.Add(new CalendarMonth { MonthNumber = 9, MonthName = "Sepetemper" });
+        months.Add(new CalendarMonth { MonthNumber = 10, MonthName = "October" });
+        months.Add(new CalendarMonth { MonthNumber = 11, MonthName = "November" });
+        months.Add(new CalendarMonth { MonthNumber = 12, MonthName = "December" });
+    }
+
+    void GotoPrevMonth()
+    {
+        if(month != 1)
+        {
+            month = month - 1;
+
+        }
+        else
+        {
+            year = year - 1;
+            month = 12;
+        }
+
+        UpdateCalendar();
+    }
+
+    void GotoToday()
+    {
+        year = DateTime.Now.Year;
+        month = DateTime.Now.Month;
+
+        UpdateCalendar();
+    }
+
+    void GotoNextMonth()
+    {
+        if (month != 12)
+        {
+            month = month + 1;
+
+        }
+        else
+        {
+            year = year + 1;
+            month = 1;
+        }
+        UpdateCalendar();
+    }
+
+    async Task SelectYear(ChangeEventArgs e)
+    {
+        year = Convert.ToInt32(e.Value.ToString());
+        // Render Calendar
+        UpdateCalendar();
+
+        //await SyncEventsFromExternalProviderToCalendar();
+    }
+
+    async Task SelectMonth(ChangeEventArgs e)
+    {
+        month = Convert.ToInt32(e.Value.ToString());
+        // Render Calendar
+        UpdateCalendar();
+
+        //await SyncEventsFromExternalProviderToCalendar();
+    }
+
+    void UpdateCalendar()
+    {
+        days = new List<CalendarDay>();
+
+        // Calculate the number of empty days
+        var firstDayDate = new DateTime(year, month, 1);
+        int weekDayNumber = (int)firstDayDate.DayOfWeek;
+        int numberOfEmptyDays = 0;
+        if (weekDayNumber == 7) // Sunday
+        {
+            numberOfEmptyDays = 0;
+        }
+        else
+        {
+            numberOfEmptyDays = weekDayNumber;
+        }
+
+        // Add the empty days
+        for (int i = 0; i < numberOfEmptyDays; i++)
+        {
+            days.Add(new CalendarDay
+            {
+                Date = new DateTime(year, month, 1).AddDays(-numberOfEmptyDays + i),
+                DayNumber = new DateTime(year, month, 1).AddDays(-numberOfEmptyDays + i).Day,
+                IsLastMonth = true
+            });
+        }
+
+        // Add the month days
+        int numberOfDaysInMonth = DateTime.DaysInMonth(year, month);
+
+        for (int i = 0; i < numberOfDaysInMonth; i++)
+        {
+            bool IsEventOnDate = false;
+
+            foreach (var nextround in NextroundList)
+            {
+                if(nextround.EventDateTime.ToShortDateString() == new DateTime(year, month, i + 1).ToShortDateString())
+                {
+                    days.Add(new CalendarDay
+                    {
+                        DayNumber = i + 1,
+                        Date = new DateTime(year, month, i + 1),
+                        IsEventDay = true,
+                        NextroundIRNumber = nextround.NextroundIRNumber
+
+                    });
+                    IsEventOnDate = true;
+                }
+
+            }
+            if (!IsEventOnDate)
+            {
+                days.Add(new CalendarDay
+                {
+                    DayNumber = i + 1,
+                    Date = new DateTime(year, month, i + 1),
+                });
+
+            }
+        }
+
+
+
+        // 2- Calcualte the number of rows
+        int remaning = days.Count % 7;
+        if (remaning == 0)
+            rowsCount = days.Count / 7;
+        else
+            rowsCount = Convert.ToInt32(days.Count / 7) + 1;
+
+        //Console.WriteLine($"Total Rows: {rowsCount} | Number of Empty Days {numberOfEmptyDays} | Month Days {numberOfDaysInMonth}");
+
+
+        for (int i = 0; i < (rowsCount * 7 - numberOfDaysInMonth - numberOfEmptyDays); i++)
+        {
+            days.Add(new CalendarDay
+            {
+                Date = new DateTime(year, month, 1).AddDays(i),
+                DayNumber = new DateTime(year, month, 1).AddDays(i).Day,
+                IsNextMonth = true
+            });
+        }
+
+        OnCalendarUpdated.InvokeAsync(new CalendarDay
+        {
+            Date = new DateTime(year, month, 1),
+            DayNumber = new DateTime(year, month, 1).Day
+        });
+    }
+
+    //async Task SyncEventsFromExternalProviderToCalendar()
+    //{
+    //    // fetch the events for the month
+    //    var events = await eventsProvider.GetEventsInMonthAsync(year, month);
+
+    //    if (events == null || events.Count() == 0)
+    //        return;
+
+    //    foreach (var day in days)
+    //    {
+    //        if (day.IsEmpty)
+    //            continue;
+
+    //        var eventsInDay = events.Where(e => e.StartDate.Date <= day.Date && e.EndDate.Date >= day.Date);
+    //        if (eventsInDay.Any())
+    //        {
+    //            day.Events.AddRange(eventsInDay);
+    //        }
+    //    }
+    //}
+
+
+}

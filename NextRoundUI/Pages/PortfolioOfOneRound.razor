@@ -1,0 +1,198 @@
+﻿
+
+@inject IJSRuntime JsRuntime
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@inject IPortfolioData _db
+
+
+@inject IModalService Modal;
+
+<main id="main" class="bg-light" style="max-width: 1124.19px;">
+    <div class="row">
+        <div class="col-xl-4 col-lg-6 px-0 d-none d-lg-block">
+
+            <!-- ======= Services Section ======= -->
+            <section id="services" class="services">
+                <div class="container" data-aos="fade-up">
+
+
+
+                    <div class="col-12 justify-content-center align-item-center" data-aos="zoom-in" data-aos-delay="50">
+
+                        <div class="icon-box rounded">
+
+                            <h4 style="color: #272829;" class="mb-2">@InterestedNextroundIREvent.NameOfHostingOrganization</h4>
+
+                            <img src="assets/img/VC/@InterestedNextroundIREvent.URLOfLogoImage" class="img-fluid mb-4" alt="" style="width: 190px; height: 100px; object-fit: contain;">
+
+
+                            <h3 style="color: #000000;" class="mb-1">Round @InterestedNextroundIREvent.NextroundIRNumber</h3>
+                            <p style="color: #272829;" class="mb-5">@InterestedNextroundIREvent.EventDateTime.ToShortDateString() @InterestedNextroundIREvent.EventDateTime.ToShortTimeString()</p>
+                            <p style="color: #272829;" class="mb-1">카카오TV Live IR</p>
+                            <p style="color: #272829;">채널: KDB NEXTROUND</p>
+                        </div>
+                    </div>
+
+
+
+                </div>
+            </section><!-- End Services Section -->
+
+
+        </div>
+        <div class="col-xl-8 col-lg-6">
+
+
+            <!-- ======= Portfolio Section ======= -->
+            <section id="portfolio" class="portfolio section-bg">
+                <div class="container" data-aos="fade-up">
+
+
+
+
+                    @if (portfolios is null)
+                    {
+                        <p>Loading</p>
+                    }
+                    else
+                    {
+                        <div class="row portfolio-container" data-aos="fade-up" data-aos-delay="300">
+
+
+                            @foreach (var portfolio in portfolios)
+                            {
+                                if (portfolio.ProductCategories is null | portfolio.ProductImages is null)
+                                {
+                                    <p>Loading</p>
+
+                                }
+                                else
+                                {
+
+                                    <div class="col-xl-4 col-lg-12 portfolio-item">
+
+
+                                        <div class="portfolio-wrap" style="box-shadow: 3px 3px 2px rgba(0,0,0,0.2)">
+
+                                            <img src="assets/img/portfolio/@portfolio.ProductImages[0].ImageFileAddress" class="img-fluid" style="width: 640px; object-fit: contain;">
+                                            <div class="portfolio-info">
+                                                <h4>@portfolio.NameOfCompany</h4>
+                                                <p>@portfolio.NameOfMainProduct</p>
+
+                                                <div class="portfolio-links">
+
+
+                                                    <AuthorizeView>
+                                                        <Authorized>
+                                                            <button @onclick="@(() => ShowCompanyDetails(portfolio))" class="btn btn-link btn-lg" title="상세정보"><i class="bx bx-expand"></i></button>
+
+                                                        </Authorized>
+                                                        <NotAuthorized>
+                                                            <a href="Identity/Account/Login" class="text-sm-center" title="Log in"><i class="bx bx-log-in-circle"></i></a>
+                                                        </NotAuthorized>
+                                                    </AuthorizeView>
+
+
+                                                </div>
+
+
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                }
+
+                            }
+                        </div>
+
+                    }
+
+
+
+                </div>
+            </section><!-- End Portfolio Section -->
+
+
+        </div>
+
+    </div>
+
+
+</main><!-- End #main -->
+
+
+
+
+
+@code{
+
+    [Parameter]
+    public NextroundIREventsModel InterestedNextroundIREvent { get; set; }
+
+    private List<PortfolioModel> portfolios;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+
+        await GetPortfolioList();
+
+
+    }
+
+
+    private async Task GetPortfolioList()
+    {
+
+        portfolios = await _db.GetPortfoliosByParticipatedNextround(InterestedNextroundIREvent.NextroundIRNumber);
+
+        foreach (var portfolio in portfolios)
+        {
+            List<ProductCategoryModel> productCategories;
+            List<ProductImageModel> productImages;
+            List<PortfolioRankModel> portfolioRanks;
+
+
+            productCategories = await _db.GetProductCategoriesByPortfolioId(portfolio.PortfolioId);
+            productImages = await _db.GetProductImagesByPortfolioId(portfolio.PortfolioId);
+            portfolioRanks = await _db.GetPortfolioRankByPortfolioIdAndRankingName(portfolio.PortfolioId);
+
+            foreach (var productCategory in productCategories)
+            {
+                portfolio.FilterString = portfolio.FilterString + " filter-" + productCategory.ProductCategory.ToLower();
+            }
+
+            portfolio.ProductCategories.AddRange(productCategories);
+            portfolio.ProductImages.AddRange(productImages);
+            portfolio.portfolioRankings.AddRange(portfolioRanks);
+
+
+
+        }
+
+    }
+
+
+    private void ShowCompanyDetails(PortfolioModel interestedCompany)
+    {
+        var parameters = new ModalParameters();
+        parameters.Add(nameof(CompanyDetails.Portfolio), interestedCompany);
+
+        Modal.Show<CompanyDetails>(interestedCompany.NameOfCompany + " 회사소개", parameters);
+    }
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        Thread.Sleep(50);
+        await JsRuntime.InvokeVoidAsync("runIsotope");
+
+    }
+
+
+}

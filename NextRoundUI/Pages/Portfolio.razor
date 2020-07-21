@@ -1,0 +1,295 @@
+﻿@page "/Portfolio"
+
+@inject IJSRuntime JsRuntime
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@inject IPortfolioData _db
+
+
+@inject IModalService Modal;
+
+<main id="main" class="bg-light pb-5"  style="min-height: 130vh;">
+
+
+    <!-- ======= Portfolio Section ======= -->
+    <section id="portfolio" class="portfolio section-bg">
+        <div class="container" data-aos="fade-up">
+
+            <div class="section-title">
+                <h2>the &nbsp; next &nbsp; big &nbsp; things!</h2>
+                <p>Magnam dolores commodi suscipit. Necessitatibus eius consequatur ex aliquid fuga eum quidem. Sit sint consectetur velit. Quisquam quos quisquam cupiditate. Et nemo qui impedit suscipit alias ea. Quia fugiat sit in iste officiis commodi quidem hic quas.</p>
+            </div>
+
+            <div id="accordion">
+                <div class="card  bg-transparent border-0 m-0">
+                    <div class="card-header bg-transparent border-0" id="headingOne">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                <strong><i class="bx bx-hash"></i> Show hash tags</strong>
+                            </button>
+                        </h5>
+                    </div>
+
+                    <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                        <div class="card-body">
+
+
+                            <div class="row">
+                                <div class="col-lg-12 d-flex justify-content-center" data-aos="fade-up" data-aos-delay="100">
+                                    <ul id="portfolio-flters">
+                                        <li data-filter="*" class="filter-active"># ALL</li>
+
+                                        @foreach (var button in filterButtons)
+                                        {
+                                            <li data-filter="@button.FilterClass"># @button.ButtonString</li>
+
+                                        }
+
+                                    </ul>
+                                </div>
+                            </div>
+
+
+                            <div class="row">
+                                <div class="col-lg-12 d-flex justify-content-center" data-aos="fade-up" data-aos-delay="100">
+                                    <ul id="portfolio-sorts">
+                                        <li data-filter="RankingA" class="sorts-active">RankingA</li>
+                                        <li data-filter="RankingB">RankingB</li>
+                                        <li data-filter="RankingC">RankingC</li>
+                                        <li data-filter="RankingD">RankingD</li>
+                                        <li data-filter="RankingE">RankingE</li>
+                                        <li data-filter="DateTime">Updated date</li>
+
+                                    </ul>
+                                </div>
+                            </div>
+
+
+
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+
+
+
+            @if (portfolios is null)
+            {
+                <p>Loading</p>
+            }
+            else
+            {
+                <div class="row portfolio-container" data-aos="fade-up" data-aos-delay="200">
+
+                    <AuthorizeView>
+                        <Authorized>
+
+                            <div class="col-lg-3 col-md-4 col-sm-6 portfolio-item">
+                                <p class="RankingA d-none"> 0 </p>
+                                <p class="RankingB d-none"> 0 </p>
+                                <p class="RankingC d-none"> 0 </p>
+                                <p class="RankingD d-none"> 0 </p>
+                                <p class="RankingE d-none"> 0 </p>
+
+
+                                <div class="portfolio-wrap" style="box-shadow: 8px 8px 5px rgba(255,0,0,0.2)">
+
+                                    <img src="assets/img/whiteboard-849811_1920.jpg" class="img-fluid" alt="">
+                                    <div class="portfolio-info">
+
+                                        <div class="portfolio-links">
+                                            <button class="btn btn-link btn-lg" @onclick="@ShowUploadPortfolioPage"><i class="bx bx-user-voice text-danger"></i></button>
+
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <h4 class="text-danger text-center mt-3">Share YOUR story!</h4>
+
+
+                            </div>
+                        </Authorized>
+
+                    </AuthorizeView>
+
+
+
+                    @foreach (var portfolio in portfolios)
+                    {
+                        if (portfolio.ProductCategories is null | portfolio.ProductImages is null)
+                        {
+                            <p>Loading</p>
+
+                        }
+                        else
+                        {
+
+                            <div class="col-lg-3 col-md-4 col-sm-6 portfolio-item @portfolio.FilterString">
+
+
+                                @foreach (var ranking in portfolio.portfolioRankings)
+                                {
+                                    <p class="@ranking.PortfolioRankingName d-none"> @ranking.PortfolioRanking </p>
+                                }
+
+
+                                <p class="DateTime d-none"> @portfolio.UpdatedDateTime </p>
+
+                                <div class="portfolio-wrap" style="box-shadow: 3px 3px 2px rgba(0,0,0,0.2)">
+
+                                    @if (portfolio.ParticipatedNextround != 0)
+                                    {
+                                        <img src="assets/img/frog.png" class="img-fluid mx-auto" style=" width: 30px; height: 30px; object-fit: contain; position: absolute; right: 0.1em; bottom: 0.1em;">
+
+                                    }
+
+
+                                    <img src="assets/img/portfolio/@portfolio.ProductImages[0].ImageFileAddress" class="img-fluid" alt="" style="width: 640px; object-fit: contain;">
+                                    <div class="portfolio-info">
+                                        <h4>@portfolio.NameOfCompany</h4>
+                                        <p>@portfolio.NameOfMainProduct</p>
+
+                                        <div class="portfolio-links">
+
+
+                                            <AuthorizeView>
+                                                <Authorized>
+                                                    <button @onclick="@(() => ShowCompanyDetails(portfolio))" class="btn btn-link btn-lg" title="상세정보"><i class="bx bx-expand"></i></button>
+
+                                                </Authorized>
+                                                <NotAuthorized>
+                                                    <a href="Identity/Account/Login" class="text-sm-center" title="Log in"><i class="bx bx-log-in-circle"></i></a>
+                                                </NotAuthorized>
+                                            </AuthorizeView>
+
+
+                                        </div>
+
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        }
+
+                    }
+                </div>
+
+            }
+
+
+
+        </div>
+    </section><!-- End Portfolio Section -->
+
+</main><!-- End #main -->
+
+
+
+
+
+@code{
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        Thread.Sleep(50);
+        await JsRuntime.InvokeVoidAsync("runIsotope");
+
+    }
+
+
+    private List<PortfolioModel> portfolios;
+    private List<ProductCategoryModel> buttonList;
+
+    private class FilterButton
+    {
+        public string ButtonString { get; set; }
+        public string FilterClass { get; set; }
+    }
+
+    private List<FilterButton> filterButtons = new List<FilterButton>();
+
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+
+        await GetPortfolioList(0);
+
+
+        buttonList = await _db.GetAllCategoriesOfProductUniquely();
+
+
+        foreach (var button in buttonList)
+        {
+            filterButtons.Add(new FilterButton { ButtonString = button.ProductCategory.ToUpper(), FilterClass = ".filter-" + button.ProductCategory.ToLower() });
+        }
+
+
+
+    }
+
+
+
+
+
+    private async Task GetPortfolioList(int sortRanking)
+    {
+
+        portfolios = await _db.GetPortfolios();
+
+        foreach (var portfolio in portfolios)
+        {
+            List<ProductCategoryModel> productCategories;
+            List<ProductImageModel> productImages;
+            List<PortfolioRankModel> portfolioRanks;
+
+
+            productCategories = await _db.GetProductCategoriesByPortfolioId(portfolio.PortfolioId);
+            productImages = await _db.GetProductImagesByPortfolioId(portfolio.PortfolioId);
+            portfolioRanks = await _db.GetPortfolioRankByPortfolioIdAndRankingName(portfolio.PortfolioId);
+
+            foreach (var productCategory in productCategories)
+            {
+                portfolio.FilterString = portfolio.FilterString + " filter-" + productCategory.ProductCategory.ToLower();
+            }
+
+            portfolio.ProductCategories.AddRange(productCategories);
+            portfolio.ProductImages.AddRange(productImages);
+            portfolio.portfolioRankings.AddRange(portfolioRanks);
+
+
+
+        }
+
+    }
+
+
+    private void ShowCompanyDetails(PortfolioModel interestedCompany)
+    {
+        var parameters = new ModalParameters();
+        parameters.Add(nameof(CompanyDetails.Portfolio), interestedCompany);
+
+        Modal.Show<CompanyDetails>(interestedCompany.NameOfCompany + " 회사소개", parameters);
+    }
+
+    private void ShowUploadPortfolioPage()
+    {
+        var parameters = new ModalParameters();
+
+        Modal.Show<UploadPortfolio>("Share your story!", parameters);
+    }
+
+
+
+
+
+}

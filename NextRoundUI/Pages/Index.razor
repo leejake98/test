@@ -1,0 +1,17 @@
+﻿
+@inject IJSRuntime JsRuntime
+
+
+<Hero></Hero>
+<Portfolio></Portfolio>
+
+
+<button class="btn btn-primary" @onclick="ShowAlert">show alert!</button>
+
+
+@code{
+    async Task ShowAlert()
+    {
+        await JsRuntime.InvokeVoidAsync("createAlert");
+    }
+}

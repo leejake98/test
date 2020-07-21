@@ -1,0 +1,195 @@
+﻿@page "/company_details"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+
+@inject IJSRuntime JSRuntime;
+@inject IModalService ModalService
+
+
+
+<!-- ======= Portfolio Details ======= -->
+<section id="portfolio-details" class="portfolio-details">
+
+    <div class="container" data-aos="fade-up">
+
+        <div class="row">
+
+            <div class="col-lg-8">
+
+                <div class="owl-carousel portfolio-details-carousel">
+
+                    @foreach (var image in Portfolio.ProductImages)
+                    {
+                        if (image.ImageFileAddress.Split('.')[1] != "mp4")
+                        {
+                            <img src="assets/img/portfolio/@image.ImageFileAddress" class="img-fluid mx-auto" alt="" style="width: 640px; height: 380px; object-fit: contain;">
+
+                        }
+                    }
+
+                    @foreach (var image in Portfolio.ProductImages)
+                    {
+                        if (image.ImageFileAddress.Split('.')[1] == "mp4")
+                        {
+                            <video width="640" height="380" controls preload="auto" class="border-0">
+                                <source src="@image.ImageFileAddress" type="video/mp4">
+                            </video>
+                        }
+                    }
+
+                    <div class="item-video" data-merge="2"><a class="owl-video" href="https://www.youtube.com/watch?v=EF_kj2ojZaE"></a></div>
+                    <iframe src='https://www.vlive.tv/embed/199988?autoPlay=true' frameborder='no' scrolling='no' marginwidth='0' marginheight='0' WIDTH='640' HEIGHT='380' allowfullscreen></iframe>
+
+
+                </div>
+            </div>
+
+            <div class="col-lg-4 portfolio-info p-1">
+
+                <ul>
+
+                    <li>
+
+                        <div class="container p-0">
+
+                            <div class="row p-0">
+
+                                <div class="col-md-4 col-6"><strong>설립연도</strong> </div>
+                                <div class="col-md-8 col-6"><strong>@Portfolio.YearCompanyWasFounded</strong> </div>
+
+                            </div>
+
+                        </div>
+
+                    </li>
+
+
+                    <li>
+
+                        <div class="container p-0">
+
+                            <div class="row p-0">
+
+                                <div class="col-md-4 col-6"><strong>CEO</strong>  </div>
+                                <div class="col-md-8 col-6"><strong>@Portfolio.CEO</strong> </div>
+
+                            </div>
+
+                        </div>
+
+                    </li>
+
+                    <li>
+
+                        <div class="container p-0">
+
+                            <div class="row p-0">
+
+                                <div class="col-md-4 col-6"><strong>홈페이지</strong>  </div>
+                                <div class="col-md-8 col-6"><strong>@Portfolio.HomepageURL</strong> </div>
+
+                            </div>
+
+                        </div>
+
+                    </li>
+                    <li>
+
+                        <div class="container p-0">
+
+                            <div class="row p-0">
+
+                                <div class="col-md-4 col-6"><strong>넥스트라운드</strong>  </div>
+                                <div class="col-md-8 col-6"><strong>@Portfolio.ParticipatedNextround</strong> </div>
+
+                            </div>
+
+                        </div>
+
+                    </li>
+                    <li>
+                        <div class="container p-0">
+
+                            <div class="row p-0">
+
+                                <div class="col-md-4 col-6"><strong>주요제품</strong> </div>
+                                <div class="col-md-8 col-6"><strong>@Portfolio.NameOfMainProduct</strong> </div>
+
+                            </div>
+
+                        </div>
+
+                    </li>
+
+                    <li>
+
+                        <div class="container p-0">
+
+                            <div class="row p-0">
+
+                                <div class="col-12">
+
+                                    <div class="container bg-light">
+
+                                        <div class="row">
+
+                                            @foreach (var category in Portfolio.ProductCategories)
+                                            {
+                                                <div class="col-auto"># @category.ProductCategory</div>
+                                            }
+
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </li>
+
+                </ul>
+
+                <p>
+                    Autem ipsum nam porro corporis rerum. Quis eos dolorem eos itaque inventore commodi labore quia quia. Exercitationem repudiandae officiis neque suscipit non officia eaque itaque enim. Voluptatem officia accusantium nesciunt est omnis tempora consectetur dignissimos. Sequi nulla at esse enim cum deserunt eius.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="row">
+            <div class="col-12 col-lg-6">
+                <PostComments></PostComments>
+            </div>
+
+            <div class="col-12 col-lg-6">
+                <PostComments></PostComments>
+            </div>
+
+
+        </div>
+    </div>
+    
+</section><!-- End Portfolio Details -->
+
+
+
+@code {
+
+    private string hashTagName = "";
+
+    [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; }
+
+    [Parameter] public PortfolioModel Portfolio { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JSRuntime.InvokeVoidAsync("runCarousel");
+
+
+    }
+
+}

@@ -1,0 +1,207 @@
+﻿@page "/UpcomingEvents"
+
+@inject IJSRuntime JsRuntime
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@inject IPortfolioData _db
+
+
+@inject IModalService Modal;
+
+
+
+
+<main id="main" class="bg-light pb-5" style="min-height: 130vh;">
+
+
+
+
+    <!-- ======= Services Section ======= -->
+    <section id="services" class="services">
+        <div class="container" data-aos="fade-up">
+
+            <div class="section-title">
+                <h2>IR Rounds</h2>
+                <p>Magnam dolores commodi suscipit. Necessitatibus eius consequatur ex aliquid fuga eum quidem. Sit sint consectetur velit. Quisquam quos quisquam cupiditate. Et nemo qui impedit suscipit alias ea. Quia fugiat sit in iste officiis commodi quidem hic quas.</p>
+            </div>
+
+            <div class="row">
+
+                
+
+                @if (nextroundIREvents is null)
+                {
+                    <p></p>
+                }
+                else
+                {
+
+
+                    <div class="col-md-12 col-lg-6 justify-content-center" data-aos="zoom-in" data-aos-delay="100">
+                        <div class="icon-box iconbox-blue px-5" style="max-width : 1000px;">
+                            <Calendar OnCalendarUpdated="HandleCalendarUpdated" NextroundList="nextroundIREvents">
+
+                                <DayTemplate Context="day">
+                                    @{
+                                        string currentDayClass = day.Date == DateTime.Now.Date ? "current-day" : "";
+                                        string selectedDayClass = day == selectedDay ? "selected-day" : "";
+                                        string eventDayClass = day.IsEventDay ? "event" : "";
+
+                                    }
+                                    @if (day.IsLastMonth)
+                                    {
+                                        <div class="rounded-circle day prev-month">
+
+                                            @day.DayNumber
+
+                                        </div>
+                                    }
+
+                                    else if (day.IsNextMonth)
+                                    {
+                                        <div class="rounded-circle day next-month">
+
+                                            @day.DayNumber
+
+                                        </div>
+                                    }
+
+                                    else if (!day.IsLastMonth)
+                                    {
+                                        
+                                        string dayTitle = day.IsEventDay ? day.NextroundIRNumber + "회" : "";
+
+                                        
+                                        <div class="rounded-circle day @eventDayClass @currentDayClass @selectedDayClass" title="@dayTitle" @onclick="() => ShowEventOfSelectedDate(day)">
+
+                                            @day.DayNumber
+
+
+                                        </div>
+                                    }
+
+                                </DayTemplate>
+                            </Calendar>
+                        </div>
+                    </div>
+                 }
+
+                @if (nextroundIREvents is null)
+                {
+                    <p>Loading</p>
+                }
+                else
+                {
+
+                    @foreach (var nextroundIREvent in nextroundIREvents)
+                    {
+                        if(nextroundIREvent.EventDateTime.Year == selectedDay.Date.Year & nextroundIREvent.EventDateTime.Month == selectedDay.Date.Month)
+                        {
+
+                            <div class="col-sm-6 col-md-4 col-lg-3 align-items-stretch" data-aos="zoom-in" data-aos-delay="100">
+                                <a @onclick="@(() => ShowListOfParticipatedInTheRound(nextroundIREvent.NextroundIRNumber))">
+                                    <div class="icon-box rounded" style=" cursor: pointer;">
+
+                                        <img src="assets/img/frog.png" class="img-fluid mx-auto" style=" width: 60px; height: 60px; object-fit: contain; position: absolute; left: -0.1em; top: -1.0em;">
+
+                                        <h4 style="color: #272829;" class="mb-2">@nextroundIREvent.NameOfHostingOrganization</h4>
+
+                                        <img src="assets/img/VC/@nextroundIREvent.URLOfLogoImage" class="img-fluid mb-4" alt="" style="width: 190px; height: 100px; object-fit: contain;">
+
+
+                                        <h3 style="color: #000000;" class="mb-1">Round @nextroundIREvent.NextroundIRNumber</h3>
+                                        <p style="color: #272829;" class="mb-5">@nextroundIREvent.EventDateTime.ToShortDateString() @nextroundIREvent.EventDateTime.ToShortTimeString()</p>
+                                        <p style="color: #272829;" class="mb-1">카카오TV Live IR</p>
+                                        <p style="color: #272829;">채널: KDB NEXTROUND</p>
+                                    </div>
+                                </a>
+                            </div>
+                        }
+
+                    }
+
+                }
+
+
+
+            </div>
+
+        </div>
+    </section><!-- End Services Section -->
+</main>
+
+@code
+{
+
+
+    private CalendarDay selectedDay = new CalendarDay
+    {
+        Date = DateTime.Now
+    };
+
+
+    private List<PortfolioModel> portfolios;
+    private List<NextroundIREventsModel> nextroundIREvents;
+
+    void HandleCalendarUpdated(CalendarDay updatedDate)
+    {
+        selectedDay = updatedDate;
+
+
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+
+        nextroundIREvents = await _db.GetNextroundIREvents();
+
+
+
+    }
+
+
+
+    public void ShowEventOfSelectedDate(CalendarDay clickedDay)
+    {
+
+        selectedDay = clickedDay;
+        if (clickedDay.IsEventDay)
+        {
+            ShowListOfParticipatedInTheRound(clickedDay.NextroundIRNumber);
+
+        }
+
+    }
+
+    private NextroundIREventsModel InterestedNextroundIREvents;
+
+    public void ShowListOfParticipatedInTheRound(int participatedNextround)
+    {
+
+        foreach (var round in nextroundIREvents)
+        {
+            if(round.NextroundIRNumber == participatedNextround)
+            {
+                InterestedNextroundIREvents = round;
+            }
+        }
+
+
+
+        var parameters = new ModalParameters();
+        parameters.Add(nameof(PortfolioOfOneRound.InterestedNextroundIREvent), InterestedNextroundIREvents);
+
+        Modal.Show<PortfolioOfOneRound>(InterestedNextroundIREvents.NextroundIRNumber.ToString()+ "차, "+ InterestedNextroundIREvents.NameOfHostingOrganization+" 넥스트라운드", parameters);
+    }
+
+    protected override void OnInitialized()
+    {
+        //AddEvent.OnEventAdded += () =>
+        //{
+        //    StateHasChanged();
+        //};
+    }
+
+}
